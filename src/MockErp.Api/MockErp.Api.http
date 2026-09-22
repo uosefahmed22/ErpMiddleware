@@ -1,0 +1,17 @@
+@MockErpHost = http://localhost:5092
+
+POST {{MockErpHost}}/erp/outbound/order
+Content-Type: application/json
+Idempotency-Key: abc-123-xyz
+X-Correlation-ID: demo-correlation-001
+
+{
+  "customerId": "C1001",
+  "fullName": "John Doe",
+  "orderCode": "SO-5001",
+  "totalAmount": 200,
+  "items": [
+    { "code": "P100", "quantity": 2 },
+    { "code": "P200", "quantity": 1 }
+  ]
+}

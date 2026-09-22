@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/ErpMiddleware.Api/ErpMiddleware.Api.csproj" />
+    <Project Path="src/MockErp.Api/MockErp.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ErpMiddleware.Tests/ErpMiddleware.Tests.csproj" />
+  </Folder>
+</Solution>

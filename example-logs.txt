@@ -1,0 +1,184 @@
+ERP Middleware - Representative Log Examples
+
+These excerpts match the current application log messages and verified test scenarios.
+Framework timestamps, categories, event IDs, and exception stack traces are omitted for readability.
+Customer email addresses and full request payloads are intentionally not logged.
+Elapsed times can vary between runs.
+For manual end-to-end testing, the optional X-ERP-Simulation header selects the Mock ERP behavior.
+
+================================================================================
+SCENARIO: SUCCESS
+================================================================================
+
+[Information]
+Handling POST /erp/inbound/order with correlation ID demo-success-correlation
+
+[Information]
+Transformed inbound order SO-DEMO-001 with total amount 200
+
+[Information]
+Sending order SO-DEMO-001 to ERP. Attempt 1/3, idempotency key demo-success-key
+
+[Mock ERP - Information]
+Mock ERP received order SO-DEMO-001 for customer C1001. Total 200, items 2,
+idempotency key demo-success-key, correlation ID demo-success-correlation,
+simulation none
+
+[Mock ERP - Information]
+Mock ERP accepted order SO-DEMO-001 with status 200
+
+[Information]
+ERP responded to order SO-DEMO-001 with status 200 in 169 ms on attempt 1
+
+[Information]
+Completed POST /erp/inbound/order with status 200 and correlation ID demo-success-correlation
+
+================================================================================
+SCENARIO: IDEMPOTENT REPLAY
+================================================================================
+
+[Information]
+Handling POST /erp/inbound/order with correlation ID demo-replay-correlation
+
+[Information]
+Returning stored result for replayed idempotency key demo-success-key
+
+[Information]
+Completed POST /erp/inbound/order with status 200 and correlation ID demo-replay-correlation
+
+Note: The replayed response contains Idempotency-Replayed: true. No outbound ERP
+request is sent because the original completed response is returned from memory.
+
+================================================================================
+SCENARIO: ERP 500 WITH EXPONENTIAL BACKOFF
+================================================================================
+
+[Information]
+Handling POST /erp/inbound/order with correlation ID demo-server-error-correlation
+
+[Information]
+Sending order SO-DEMO-500 to ERP. Attempt 1/3, idempotency key demo-server-error-key
+
+[Mock ERP - Warning]
+Simulating ERP 500 error for order SO-DEMO-500
+
+[Information]
+ERP responded to order SO-DEMO-500 with status 500 in 10 ms on attempt 1
+
+[Warning]
+Retrying ERP request after 1000 ms because of ERP server error
+
+[Information]
+Sending order SO-DEMO-500 to ERP. Attempt 2/3, idempotency key demo-server-error-key
+
+[Mock ERP - Warning]
+Simulating ERP 500 error for order SO-DEMO-500
+
+[Information]
+ERP responded to order SO-DEMO-500 with status 500 in 6 ms on attempt 2
+
+[Warning]
+Retrying ERP request after 2000 ms because of ERP server error
+
+[Information]
+Sending order SO-DEMO-500 to ERP. Attempt 3/3, idempotency key demo-server-error-key
+
+[Mock ERP - Warning]
+Simulating ERP 500 error for order SO-DEMO-500
+
+[Information]
+ERP responded to order SO-DEMO-500 with status 500 in 5 ms on attempt 3
+
+[Error]
+ERP server error for idempotency key demo-server-error-key
+
+[Information]
+Completed POST /erp/inbound/order with status 502 and correlation ID demo-server-error-correlation
+
+================================================================================
+SCENARIO: ERP TIMEOUT
+================================================================================
+
+[Information]
+Handling POST /erp/inbound/order with correlation ID demo-timeout-correlation
+
+[Information]
+Sending order SO-DEMO-TIMEOUT to ERP. Attempt 1/3, idempotency key demo-timeout-key
+
+[Mock ERP - Warning]
+Simulating ERP timeout for order SO-DEMO-TIMEOUT with a delay of 12000 ms
+
+[Warning]
+ERP timeout for order SO-DEMO-TIMEOUT after 10 seconds on attempt 1/3
+
+[Warning]
+Retrying ERP request after 1000 ms because of ERP timeout
+
+[Information]
+Sending order SO-DEMO-TIMEOUT to ERP. Attempt 2/3, idempotency key demo-timeout-key
+
+[Mock ERP - Warning]
+Simulating ERP timeout for order SO-DEMO-TIMEOUT with a delay of 12000 ms
+
+[Warning]
+ERP timeout for order SO-DEMO-TIMEOUT after 10 seconds on attempt 2/3
+
+[Warning]
+Retrying ERP request after 2000 ms because of ERP timeout
+
+[Information]
+Sending order SO-DEMO-TIMEOUT to ERP. Attempt 3/3, idempotency key demo-timeout-key
+
+[Mock ERP - Warning]
+Simulating ERP timeout for order SO-DEMO-TIMEOUT with a delay of 12000 ms
+
+[Warning]
+ERP timeout for order SO-DEMO-TIMEOUT after 10 seconds on attempt 3/3
+
+[Error]
+ERP timed out for idempotency key demo-timeout-key
+
+[Information]
+Completed POST /erp/inbound/order with status 504 and correlation ID demo-timeout-correlation
+
+================================================================================
+SCENARIO: SLOW RESPONSE WITHIN TIMEOUT
+================================================================================
+
+[Information]
+Handling POST /erp/inbound/order with correlation ID demo-slow-correlation
+
+[Information]
+Sending order SO-DEMO-SLOW to ERP. Attempt 1/3, idempotency key demo-slow-key
+
+[Mock ERP - Warning]
+Simulating slow ERP response for order SO-DEMO-SLOW with a delay of 2000 ms
+
+[Information]
+ERP responded to order SO-DEMO-SLOW with status 200 in 2018 ms on attempt 1
+
+[Information]
+Completed POST /erp/inbound/order with status 200 and correlation ID demo-slow-correlation
+
+Note: The response completed before the 10-second timeout, so no retry occurred.
+
+================================================================================
+SCENARIO: PARTIAL SUCCESS
+================================================================================
+
+[Information]
+Handling POST /erp/inbound/order with correlation ID demo-partial-correlation
+
+[Information]
+Sending order SO-DEMO-PARTIAL to ERP. Attempt 1/3, idempotency key demo-partial-key
+
+[Mock ERP - Warning]
+Simulating ERP partial success for order SO-DEMO-PARTIAL
+
+[Information]
+ERP responded to order SO-DEMO-PARTIAL with status 207 in 3 ms on attempt 1
+
+[Information]
+Completed POST /erp/inbound/order with status 207 and correlation ID demo-partial-correlation
+
+Note: Partial success is returned immediately. The complete order is not retried.

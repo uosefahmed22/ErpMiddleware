@@ -1,0 +1,177 @@
+@MiddlewareHost = http://localhost:5091
+
+POST {{MiddlewareHost}}/erp/inbound/order
+Content-Type: application/json
+X-Correlation-ID: demo-correlation-001
+
+{
+  "idempotencyKey": "abc-123-xyz",
+  "customer": {
+    "erpCustomerId": "C1001",
+    "name": "John Doe",
+    "email": "john@example.com"
+  },
+  "order": {
+    "orderNumber": "SO-5001",
+    "date": "2026-09-21",
+    "lines": [
+      { "sku": "P100", "qty": 2, "price": 50 },
+      { "sku": "P200", "qty": 1, "price": 100 }
+    ]
+  }
+}
+
+### Duplicate replay - run the first valid request before this one
+
+POST {{MiddlewareHost}}/erp/inbound/order
+Content-Type: application/json
+X-Correlation-ID: demo-correlation-replay
+
+{
+  "idempotencyKey": "abc-123-xyz",
+  "customer": {
+    "erpCustomerId": "C1001",
+    "name": "John Doe",
+    "email": "john@example.com"
+  },
+  "order": {
+    "orderNumber": "SO-5001",
+    "date": "2026-09-21",
+    "lines": [
+      { "sku": "P100", "qty": 2, "price": 50 },
+      { "sku": "P200", "qty": 1, "price": 100 }
+    ]
+  }
+}
+
+### Idempotency conflict - uses the original key with a changed order number
+
+POST {{MiddlewareHost}}/erp/inbound/order
+Content-Type: application/json
+
+{
+  "idempotencyKey": "abc-123-xyz",
+  "customer": {
+    "erpCustomerId": "C1001",
+    "name": "John Doe",
+    "email": "john@example.com"
+  },
+  "order": {
+    "orderNumber": "SO-DIFFERENT",
+    "date": "2026-09-21",
+    "lines": [
+      { "sku": "P100", "qty": 2, "price": 50 }
+    ]
+  }
+}
+
+### ERP 500 error - use a new idempotency key
+
+POST {{MiddlewareHost}}/erp/inbound/order
+Content-Type: application/json
+X-ERP-Simulation: server-error
+
+{
+  "idempotencyKey": "simulation-server-error-001",
+  "customer": {
+    "erpCustomerId": "C1001",
+    "name": "John Doe",
+    "email": "john@example.com"
+  },
+  "order": {
+    "orderNumber": "SO-SERVER-ERROR",
+    "date": "2026-09-21",
+    "lines": [
+      { "sku": "P100", "qty": 2, "price": 50 },
+      { "sku": "P200", "qty": 1, "price": 100 }
+    ]
+  }
+}
+
+### Slow response - use a new idempotency key
+
+POST {{MiddlewareHost}}/erp/inbound/order
+Content-Type: application/json
+X-ERP-Simulation: slow-response
+
+{
+  "idempotencyKey": "simulation-slow-response-001",
+  "customer": {
+    "erpCustomerId": "C1001",
+    "name": "John Doe",
+    "email": "john@example.com"
+  },
+  "order": {
+    "orderNumber": "SO-SLOW",
+    "date": "2026-09-21",
+    "lines": [
+      { "sku": "P100", "qty": 2, "price": 50 },
+      { "sku": "P200", "qty": 1, "price": 100 }
+    ]
+  }
+}
+
+### Partial success - use a new idempotency key
+
+POST {{MiddlewareHost}}/erp/inbound/order
+Content-Type: application/json
+X-ERP-Simulation: partial-success
+
+{
+  "idempotencyKey": "simulation-partial-success-001",
+  "customer": {
+    "erpCustomerId": "C1001",
+    "name": "John Doe",
+    "email": "john@example.com"
+  },
+  "order": {
+    "orderNumber": "SO-PARTIAL",
+    "date": "2026-09-21",
+    "lines": [
+      { "sku": "P100", "qty": 2, "price": 50 },
+      { "sku": "P200", "qty": 1, "price": 100 }
+    ]
+  }
+}
+
+### Timeout - use a new idempotency key
+
+POST {{MiddlewareHost}}/erp/inbound/order
+Content-Type: application/json
+X-ERP-Simulation: timeout
+
+{
+  "idempotencyKey": "simulation-timeout-001",
+  "customer": {
+    "erpCustomerId": "C1001",
+    "name": "John Doe",
+    "email": "john@example.com"
+  },
+  "order": {
+    "orderNumber": "SO-TIMEOUT",
+    "date": "2026-09-21",
+    "lines": [
+      { "sku": "P100", "qty": 2, "price": 50 },
+      { "sku": "P200", "qty": 1, "price": 100 }
+    ]
+  }
+}
+
+### Invalid request - empty order lines
+
+POST {{MiddlewareHost}}/erp/inbound/order
+Content-Type: application/json
+
+{
+  "idempotencyKey": "invalid-empty-lines",
+  "customer": {
+    "erpCustomerId": "C1001",
+    "name": "John Doe",
+    "email": "john@example.com"
+  },
+  "order": {
+    "orderNumber": "SO-5002",
+    "date": "2026-09-21",
+    "lines": []
+  }
+}
